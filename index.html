@@ -311,10 +311,11 @@ processBtn.addEventListener('click', async () => {
       },
       body: JSON.stringify({
         model: 'mimo-v2.5-pro',
-        max_tokens: 400,
+        max_tokens: 2000,
         system: '你是一个只输出JSON的助手,不要输出任何多余文字、不要markdown代码块标记。',
         messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }],
-        temperature: 0.3
+        temperature: 0.3,
+        thinking: { type: 'disabled' }
       })
     });
 
@@ -328,7 +329,10 @@ processBtn.addEventListener('click', async () => {
     }
 
     const data = JSON.parse(rawText);
-    let raw = data.content.map(c => c.text || '').join('');
+    let raw = data.content.filter(c => c.type === 'text').map(c => c.text || '').join('');
+    if (!raw) {
+      throw new Error(`未返回文本内容,stop_reason: ${data.stop_reason}`);
+    }
     raw = raw.trim().replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
 
     const parsed = JSON.parse(raw);
